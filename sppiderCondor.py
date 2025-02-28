@@ -41,7 +41,6 @@ Example
     usage:
 
         sppiderCondor.py -f Saccharomycodales_read_paths.txt -r Saccharomycodales_genome_paths.txt
-    
 
 Requirements
 ------------
@@ -82,21 +81,44 @@ def main():
         cmdparser.print_help()
         sys.exit(1)
 
-    # define dictionary to hold fastq information
+    # dictionary to hold fastq information
     # key = fastq name
     # value = path to fastq file
     fastq = {}
-
     if cmdResults['FASTQS'] is not None:
         with open(cmdResults['FASTQS'], 'r') as f:
             for ln in f:
-                print(ln)        
+                sample, fastqPath = ln.rstrip().split('\t')
+                if sample not in fastq:
+                    fastq[sample] = fastqPath
+                else:
+                    print('\nDuplicate sample names not allowed.')
+                    print(f'Duplicate sample name : {sample}\n')
+                    cmdparser.print_help()
     else:
         cmdparser.print_help()
         cmdparser.exit(1, "Fastq file is missing.")
 
-    if cmdResults['FILE'] is not None:
-        inFile = cmdResults['FILE']        
+    # dictionary to hold reference genome information
+    # key = sample name, expected to match the name in the fastq file
+    # value = path to ref genome
+    refs = {}
+    if cmdResults['REF'] is not None:
+        with open(cmdResults['REF']) as f:
+            for ln in f:
+                reference, refPath = ln.rstrip().split('\t')
+                if reference not in refs:
+                    refs[reference] = refPath
+                else:
+                    print('\nDuplicate reference names not allowed.')
+                    print(f'Duplicate reference name : {reference}\n')
+                    cmdparser.print_help()
+    else:
+        cmdparser.print_help()
+        cmdparser.exit(1, "Reference genome file is missing.")                
+                    
+    
+       
 
 if __name__ == "__main__":
     main()
