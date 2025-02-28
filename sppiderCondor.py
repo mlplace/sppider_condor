@@ -87,7 +87,7 @@ def combine_Submit():
         out.write("# --key list of genome names and filepaths. Expected in '/tmp/sppIDer/working' + args.key\n")
         out.write('arguments = /tmp/sppIDer/combineRefGenomes.py')
         out.write(' --out $(out)')
-        out.write('	--key $(refLst)\n')
+        out.write('	--key $(refKey)\n')
         out.write('\n')
         out.write("# It's not convenient, but chaining parent directory navigation allows accessing shared filesystem paths, instead of hard coded paths\n")
         out.write('# make sure the keyfile contents use the same pathing:\n')
@@ -175,23 +175,21 @@ def main():
         prefix = re.sub('.haplomerger2','', sample) + '.fasta'
         refSet = set(refs.keys())   # get a set of all reference names
         refSet.discard(sample)      # remove the fastq name 
-        refLst = []
-        for r in refSet:
-            if r in refs:
-                refLst.append(refs[r])
-        print(refLst)
+        keyFile = 'job-' + str(num) + '-keylist.txt'
+        with open(keyFile, 'w') as out:
+            for r in refSet:
+                if r in refs:
+                    outLine = f'{r}\t{refs[r]}\n'
+                    out.write(outLine)
+        
         combineJob = Job('sppider-combine.submit', 'job' + str(num))
         combineJob.pre_skip(1)
         combineJob.add_var('out', prefix)
-        combineJob.add_var('refList', refLst)
+        combineJob.add_var('refKey', keyFile)
         mydag.add_job(combineJob)    
 
     mydag.save('MasterDagman.dsf')
     
-
-        
-
-
        
 
 if __name__ == "__main__":
