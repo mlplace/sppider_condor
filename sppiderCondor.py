@@ -63,6 +63,50 @@ import argparse
 from pydagman.dagfile import Dagfile 
 from pydagman.job import Job
 
+def combine_Submit():
+    """combine_Submit
+
+    Create a generic combineRefGenomes.py submit file.    
+    """
+    with open('sppider-combine.submit','w') as out:
+        out.write('docker_image = glbrc/sppider\n')
+        out.write('\n')
+        out.write('# Enable custom docker scratch dir /tmp/sppIDer/working\n')
+        out.write('# The published docker image is hard coded to use this path\n')
+        out.write('+DockerSppIDerScratchMount=True\n')
+        out.write('\n')
+        out.write('# The docker image entrypoint is "/usr/bin/python2.7"\n')
+        out.write('# for interactive job testing, set "docker_override_entrypoint = True"\n')
+        out.write('# docker_override_entrypoint = True\n')
+        out.write('# executable = /bin/sh\n')
+        out.write('\n')
+        out.write('# sppIDer scripts are in the image under /tmp/sppIDer/\n')
+        out.write('\n')
+        out.write('# combineRefGenomes.py\n')
+        out.write('# --out Output prefix for combined genome files. Written to /tmp/sppIDer/working/\n')
+        out.write("# --key list of genome names and filepaths. Expected in '/tmp/sppIDer/working' + args.key\n")
+        out.write('arguments = /tmp/sppIDer/combineRefGenomes.py')
+        out.write(' --out $(out)')
+        out.write('	--key $(refLst)\n')
+        out.write('\n')
+        out.write("# It's not convenient, but chaining parent directory navigation allows accessing shared filesystem paths, instead of hard coded paths\n")
+        out.write('# make sure the keyfile contents use the same pathing:\n')
+        out.write('# Smik	/mnt/bigdata/processed_data/data_ops/examples/sppider/set1/fasta/Smik.concat.fasta\n')
+        out.write('\n')
+        out.write('# Collect data written to the custom docker scratch dir\n')
+        out.write('should_transfer_files = YES\n')
+        out.write('when_to_transfer_output = ON_EXIT\n')
+        out.write('transfer_output_files = tmp/sppIDer/working/\n')
+        out.write('\n')
+        out.write('output = $(out)\n')
+        out.write('error = combine-$(process).txt\n')
+        out.write('log = combine-$(process).log\n')
+        out.write('\n')
+        out.write('request_cpus = 2\n')
+        out.write('request_memory = 16GB\n')
+        out.write('queue\n')
+    out.close()
+
 
 def main():
     cmdparser = argparse.ArgumentParser(description="Run sppIDer on a set of genomes and sample fastqs.", 
@@ -95,6 +139,7 @@ def main():
                     print('\nDuplicate sample names not allowed.')
                     print(f'Duplicate sample name : {sample}\n')
                     cmdparser.print_help()
+                    cmdparser.exit(1)
     else:
         cmdparser.print_help()
         cmdparser.exit(1, "Fastq file is missing.")
@@ -113,11 +158,40 @@ def main():
                     print('\nDuplicate reference names not allowed.')
                     print(f'Duplicate reference name : {reference}\n')
                     cmdparser.print_help()
+                    cmdparser.exit(1)
     else:
         cmdparser.print_help()
-        cmdparser.exit(1, "Reference genome file is missing.")                
+        cmdparser.exit(1, "Reference genome file is missing.")       
+
+      
                     
+
+    combine_Submit()
+    mydag = Dagfile()        # set up dagman
+    num = 1                  # for job steps
+    # create the sets to run
+    for sample in fastq.keys():
+        print(sample)
+        prefix = re.sub('.haplomerger2','', sample) + '.fasta'
+        refSet = set(refs.keys())   # get a set of all reference names
+        refSet.discard(sample)      # remove the fastq name 
+        refLst = []
+        for r in refSet:
+            if r in refs:
+                refLst.append(refs[r])
+        print(refLst)
+        combineJob = Job('sppider-combine.submit', 'job' + str(num))
+        combineJob.pre_skip(1)
+        combineJob.add_var('out', prefix)
+        combineJob.add_var('refList', refLst)
+        mydag.add_job(combineJob)    
+
+    mydag.save('MasterDagman.dsf')
     
+
+        
+
+
        
 
 if __name__ == "__main__":
