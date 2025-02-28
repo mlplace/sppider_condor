@@ -30,9 +30,12 @@ r : str
     yHDO590_kloeckera_taiwanica_180604.haplomerger2  /mnt/bigdata/processed_data/hittinger/fungal_genomes/from_vanderbilt/to_uw/y1000_final_files.fixed/genomes/yHDO590_kloeckera_taiwanica_180604.haplomerger2.fas
 
 ## Usage
-First activate the conda environment /home/glbrc.org/mplace/.conda/envs/metagenomics to run this script.
+First activate the conda environment which has shortuuid package. 
+You can use this one on scarcity: /home/glbrc.org/mplace/miniforge3
 
-    conda activate /home/glbrc.org/mplace/.conda/envs/metagenomics
+or create a python env with shortuuid installed, tested with Python 3.12.8.
+
+ conda install conda-forge::shortuuid
 
     sppiderCondor.py -f Saccharomycodales_read_paths.txt -r Saccharomycodales_genome_paths.txt
     
