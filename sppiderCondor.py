@@ -98,7 +98,7 @@ def combine_Submit():
         out.write('when_to_transfer_output = ON_EXIT\n')
         out.write('transfer_output_files = tmp/sppIDer/working/\n')
         out.write('\n')
-        out.write('output = combine-out.txt\n')
+        out.write('output = combine-$(process)-out.txt\n')
         out.write('error = combine-$(process).err\n')
         out.write('log = combine-$(process).log\n')
         out.write('\n')
@@ -169,7 +169,8 @@ def main():
     currDir = os.getcwd() + '/'
     # create the sets to run
     for sample in fastq.keys():
-        prefix = "job-" + str(num) + "-ref" + '.fasta'
+        print(sample)
+        prefix = "ref_" + sample + '.fasta'
         refSet = set(refs.keys())   # get a set of all reference names
         refSet.discard(sample)      # remove the fastq name 
         keyFile = 'job-' + str(num) + '-keylist.txt'
