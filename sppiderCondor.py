@@ -87,7 +87,7 @@ def combine_Submit():
         out.write("# --key list of genome names and filepaths. Expected in '/tmp/sppIDer/working' + args.key\n")
         out.write('arguments = /tmp/sppIDer/combineRefGenomes.py')
         out.write(' --out $(out)')
-        out.write('	--key $(refKey)\n')
+        out.write('	--key ../../../$(refKey)\n')
         out.write('\n')
         out.write("# It's not convenient, but chaining parent directory navigation allows accessing shared filesystem paths, instead of hard coded paths\n")
         out.write('# make sure the keyfile contents use the same pathing:\n')
@@ -98,8 +98,8 @@ def combine_Submit():
         out.write('when_to_transfer_output = ON_EXIT\n')
         out.write('transfer_output_files = tmp/sppIDer/working/\n')
         out.write('\n')
-        out.write('output = $(out)\n')
-        out.write('error = combine-$(process).txt\n')
+        out.write('output = combine-out.txt\n')
+        out.write('error = combine-$(process).err\n')
         out.write('log = combine-$(process).log\n')
         out.write('\n')
         out.write('request_cpus = 2\n')
@@ -163,16 +163,13 @@ def main():
         cmdparser.print_help()
         cmdparser.exit(1, "Reference genome file is missing.")       
 
-      
-                    
-
     combine_Submit()
     mydag = Dagfile()        # set up dagman
     num = 1                  # for job steps
+    currDir = os.getcwd() + '/'
     # create the sets to run
     for sample in fastq.keys():
-        print(sample)
-        prefix = re.sub('.haplomerger2','', sample) + '.fasta'
+        prefix = "job-" + str(num) + "-ref" + '.fasta'
         refSet = set(refs.keys())   # get a set of all reference names
         refSet.discard(sample)      # remove the fastq name 
         keyFile = 'job-' + str(num) + '-keylist.txt'
@@ -185,7 +182,7 @@ def main():
         combineJob = Job('sppider-combine.submit', 'job' + str(num))
         combineJob.pre_skip(1)
         combineJob.add_var('out', prefix)
-        combineJob.add_var('refKey', keyFile)
+        combineJob.add_var('refKey', currDir + keyFile)
         mydag.add_job(combineJob)    
 
     mydag.save('MasterDagman.dsf')
