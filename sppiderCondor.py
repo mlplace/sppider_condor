@@ -63,6 +63,43 @@ import argparse
 from pydagman.dagfile import Dagfile 
 from pydagman.job import Job
 
+def process_Submit():
+    """process_Submit
+    
+    Create a generic sppIDer.py submit file.
+    """
+    with open('sppider-process.submit', 'w') as out:
+        out.write('docker_image = glbrc/sppider\n')
+        out.write('\n')
+        out.write('# Enable custom docker scratch dir /tmp/sppIDer/working\n')
+        out.write('# The published docker image is hard coded to use this path\n')
+        out.write('+DockerSppIDerScratchMount=True\n')
+        out.write('\n')
+        out.write('# sppIDer.py\n')
+        out.write('# --out Output prefix for files, required -  Written to /tmp/sppIDer/working\n')
+        out.write('# --ref Combined Reference Genome, required\n')
+        out.write('# --r1 Read1, required\n')
+        out.write('# --r2 Read2, optional\n')
+        out.write("# --byBP Calculate coverage by basepair, optional, DEFAULT, can't be used with -byGroup\n")
+        out.write("# --byGroup   Calculate coverage by chunks of same coverage, optional, can't be used with -byBP\n")
+        out.write('arguments = /tmp/sppIDer/sppIDer.py  --out $(out)  --ref $(ref)  --r1 $(read) --byGroup \n')
+        out.write('\n')
+        out.write('# Collect data written to the custom docker scratch dir\n')
+        out.write('should_transfer_files = YES\n')
+        out.write('when_to_transfer_output = ON_EXIT\n')
+        out.write('transfer_output_files = tmp/sppIDer/working/\n')
+        out.write('\n')
+        out.write('output = process-$(process)-out.txt\n')
+        out.write('error = process-$(process).err\n')
+        out.write('log = process-$(process).log\n')
+        out.write('\n')
+        out.write('request_cpus = 2\n')
+        out.write('request_memory = 256GB\n')
+        out.write('\n')
+        out.write('queue\n')
+    out.close()
+
+
 def combine_Submit():
     """combine_Submit
 
@@ -164,6 +201,7 @@ def main():
         cmdparser.exit(1, "Reference genome file is missing.")       
 
     combine_Submit()
+    process_Submit()
     mydag = Dagfile()        # set up dagman
     num = 1                  # for job steps
     currDir = os.getcwd() + '/'
@@ -185,6 +223,16 @@ def main():
         combineJob.add_var('out', prefix)
         combineJob.add_var('refKey', currDir + keyFile)
         mydag.add_job(combineJob)    
+        num += 1
+
+        processJob = Job('sppider-process.submit', 'job' + str(num))
+        processJob.pre_skip(1)
+        processJob.add_var('out', 'process-' + sample + 'out')
+        processJob.add_var('ref', prefix)
+        processJob.add_var('read', fastq[sample])
+        processJob.add_parent(combineJob)
+        mydag.add_job(processJob)
+        num += 1
 
     mydag.save('MasterDagman.dsf')
     
