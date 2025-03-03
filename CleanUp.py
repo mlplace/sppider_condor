@@ -56,14 +56,7 @@ def main():
     # move all sample files to sample results directory
     for item in glob.glob(f'*{sampleName}*'):
         if not os.path.isdir(item):
-            os.rename(item, sampleName + '/' + item)
-
-    # send log files to sample results directory
-    [os.rename(x, sampleName + '/' + x) for x in glob.glob('combine-*.*')]
-    [os.rename(x, sampleName + '/' + x) for x in glob.glob('process-*.*')]
-
-    for joblist in glob.glob('job-*-keylist.txt'):
-        os.rename(joblist, sampleName + '/' + joblist)
+            os.rename(item, sampleName + '/' + item)        
  
 if __name__ == "__main__":
     main()
