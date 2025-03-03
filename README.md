@@ -1,7 +1,6 @@
 ## Name 
 sppiderCondor.py
 
-
 ## Description
 Using the docker image for sppIDER run a both the combineRefGenomes.py and
 sppIDer.py for a list of Reference genomes and fastq files.
@@ -17,7 +16,7 @@ The first job will be
 
 combineRefGenomes.py using B,C,D ref genomes then using A.fastq to run sppIDer.py.
 
-Input: 
+## Input
 
 f : str
     A file containing a list of sample names and full path to sample fastq files, tab delimited.
@@ -30,15 +29,27 @@ r : str
     yHDO590_kloeckera_taiwanica_180604.haplomerger2  /mnt/bigdata/processed_data/hittinger/fungal_genomes/from_vanderbilt/to_uw/y1000_final_files.fixed/genomes/yHDO590_kloeckera_taiwanica_180604.haplomerger2.fas
 
 ## Usage
-First activate the conda environment which has shortuuid package. 
-You can use this one on scarcity: /home/glbrc.org/mplace/miniforge3
 
-or create a python env with shortuuid installed, tested with Python 3.12.8.
+Navigate to your job directory, I recommend a "clean" directory just for running this job.
 
+Activate this conda environment:
+
+      conda activate  /home/glbrc.org/mplace/miniforge3
+
+Then within your directory run:
+
+ /home/glbrc.org/mplace/scripts/sppider_condor/sppiderCondor.py -f read_paths.txt -r genome_paths.txt
+
+This will prepare the job to be run by HTCondor.  When the script is complete run  the following command (which is printed to the screen for your convenience) :
+
+Condor_submit_dag MasterDagman.dsf 
+
+## Requirements
+python package shortuuid is required.  If you want to create your own environment install is using: 
+ 
  conda install conda-forge::shortuuid
 
-    sppiderCondor.py -f Saccharomycodales_read_paths.txt -r Saccharomycodales_genome_paths.txt
-    
+Tested with Python 3.12.8.
 
 ## Support
 Please address questions to compbio@glbrc.wisc.edu.
