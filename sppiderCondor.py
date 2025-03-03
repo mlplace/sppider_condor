@@ -228,7 +228,7 @@ def main():
         processJob = Job('sppider-process.submit', 'job' + str(num))
         processJob.pre_skip(1)
         processJob.add_var('out', 'process-' + sample + 'out')
-        processJob.add_var('ref', prefix)
+        processJob.add_var('ref', currDir + prefix)
         processJob.add_var('read', fastq[sample])
         processJob.add_parent(combineJob)
         mydag.add_job(processJob)
