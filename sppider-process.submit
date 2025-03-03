@@ -1,0 +1,39 @@
+docker_image = glbrc/sppider
+
+# Enable custom docker scratch dir /tmp/sppIDer/working
+# The published docker image is hard coded to use this path
++DockerSppIDerScratchMount=True
+
+# The docker image entrypoint is "/usr/bin/python2.7"
+# for interactive job testing, set "docker_override_entrypoint = True"
+# docker_override_entrypoint = True
+# executable = /bin/sh
+
+# sppIDer scripts are in the image under /tmp/sppIDer/
+
+# sppIDer.py
+# --out Output prefix for files, required -  Written to /tmp/sppIDer/working
+# --ref Combined Reference Genome, required
+# --r1 Read1, required
+# --r2 Read2, optional
+# --byBP Calculate coverage by basepair, optional, DEFAULT, can't be used with -byGroup
+# --byGroup   Calculate coverage by chunks of same coverage, optional, can't be used with -byBP
+arguments = /tmp/sppIDer/sppIDer.py \
+			--out SRR2586170 \
+			--ref /mnt/bigdata/linuxhome/dzeng24/sppider_prac/Saccharomycodales_yHDO590/ref_Saccharomycodales_no_yHDO590.fasta \
+			--r1 /mnt/bigdata/processed_data/hittinger/y1000_final_files/reads/yHDO590_kloeckera_taiwanica_R1.fastq \
+			--byGroup
+
+# Collect data written to the custom docker scratch dir
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_output_files = tmp/sppIDer/working/
+
+output = out_p.txt
+error = err_p.txt
+log = log_p.txt
+
+request_cpus = 2
+request_memory = 256GB
+
+queue

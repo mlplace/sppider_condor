@@ -1,0 +1,34 @@
+docker_image = glbrc/sppider
+
+# Enable custom docker scratch dir /tmp/sppIDer/working
+# The published docker image is hard coded to use this path
++DockerSppIDerScratchMount=True
+
+# The docker image entrypoint is "/usr/bin/python2.7"
+# for interactive job testing, set "docker_override_entrypoint = True"
+# docker_override_entrypoint = True
+# executable = /bin/sh
+
+# sppIDer scripts are in the image under /tmp/sppIDer/
+
+# combineRefGenomes.py
+# --out Output prefix for combined genome files. Written to /tmp/sppIDer/working/
+# --key list of genome names and filepaths. Expected in '/tmp/sppIDer/working' + args.key
+arguments = /tmp/sppIDer/combineRefGenomes.py --out $(out)	--key ../../../$(refKey)
+
+# It's not convenient, but chaining parent directory navigation allows accessing shared filesystem paths, instead of hard coded paths
+# make sure the keyfile contents use the same pathing:
+# Smik	/mnt/bigdata/processed_data/data_ops/examples/sppider/set1/fasta/Smik.concat.fasta
+
+# Collect data written to the custom docker scratch dir
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_output_files = tmp/sppIDer/working/
+
+output = $(out)
+error = combine-$(process).err
+log = combine-$(process).log
+
+request_cpus = 2
+request_memory = 16GB
+queue
