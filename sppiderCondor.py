@@ -6,9 +6,9 @@ sppIDer.py for a list of Reference genomes and fastq files.
 
 Notes
 ----- 
-Activate the conda environment /home/glbrc.org/mplace/.conda/envs/metagenomics to run this script.
+Activate conda environment to run this script.
 
-    conda activate /home/glbrc.org/mplace/.conda/envs/metagenomics
+    conda activate /home/glbrc.org/mplace/miniforge3
 
 Method
 ------
@@ -41,6 +41,11 @@ Example
     usage:
 
         sppiderCondor.py -f Saccharomycodales_read_paths.txt -r Saccharomycodales_genome_paths.txt
+    
+    after running the script you should see:
+
+    Ready to submit:
+    enter: condor_submit_dag MasterDagman.dsf
 
 Requirements
 ------------
@@ -89,9 +94,9 @@ def process_Submit():
         out.write('when_to_transfer_output = ON_EXIT\n')
         out.write('transfer_output_files = tmp/sppIDer/working/\n')
         out.write('\n')
-        out.write('output = process-$(process)-out.txt\n')
-        out.write('error = process-$(process).err\n')
-        out.write('log = process-$(process).log\n')
+        out.write('output = process-$(sample)-out.txt\n')
+        out.write('error = process-$(sample).err\n')
+        out.write('log = process-$(sample).log\n')
         out.write('\n')
         out.write('request_cpus = 2\n')
         out.write('request_memory = 256GB\n')
@@ -135,9 +140,9 @@ def combine_Submit():
         out.write('when_to_transfer_output = ON_EXIT\n')
         out.write('transfer_output_files = tmp/sppIDer/working/\n')
         out.write('\n')
-        out.write('output = combine-$(process)-out.txt\n')
-        out.write('error = combine-$(process).err\n')
-        out.write('log = combine-$(process).log\n')
+        out.write('output = combine-$(sample)-out.txt\n')
+        out.write('error = combine-$(sample).err\n')
+        out.write('log = combine-$(sample).log\n')
         out.write('\n')
         out.write('request_cpus = 2\n')
         out.write('request_memory = 16GB\n')
@@ -243,7 +248,7 @@ def main():
         prefix = "ref_" + sample + '.fasta'
         refSet = set(refs.keys())   # get a set of all reference names
         refSet.discard(sample)      # remove the fastq name 
-        keyFile = 'job-' + str(num) + '-keylist.txt'
+        keyFile = 'job-' + sample + '-keylist.txt'
         with open(keyFile, 'w') as out:
             for r in refSet:
                 if r in refs:
@@ -254,6 +259,7 @@ def main():
         combineJob.pre_skip(1)
         combineJob.add_var('out', prefix)
         combineJob.add_var('refKey', currDir + keyFile)
+        combineJob.add_var('sample', sample)
         mydag.add_job(combineJob)    
         num += 1
 
@@ -262,6 +268,7 @@ def main():
         processJob.add_var('out', 'process-' + sample + 'out')
         processJob.add_var('ref', currDir + prefix)
         processJob.add_var('read', fastq[sample])
+        processJob.add_var('sample', sample)
         processJob.add_parent(combineJob)
         mydag.add_job(processJob)
         num += 1
