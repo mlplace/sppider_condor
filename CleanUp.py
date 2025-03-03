@@ -16,7 +16,6 @@ Example
 -------
     usage:
            ~/scripts/sppider_condor/CleanUp.py -s yHDO590_kloeckera_taiwanica_180604.haplomerger2
-
 """
 import glob
 import os
