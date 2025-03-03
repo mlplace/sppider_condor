@@ -144,6 +144,34 @@ def combine_Submit():
         out.write('queue\n')
     out.close()
 
+def cleanUpSubmitFile():
+    """cleanUpSubmitFile
+
+    Create a submit file to run the cleanup script.        
+    """
+    with open('cleanup.submit', 'w') as submit:
+        submit.write("Universe                 = vanilla\n")
+        submit.write("Executable               = run_cleanup.sh\n")
+        submit.write("Arguments                = $(sample)\n")
+        submit.write("Getenv                   = True\n") 
+        submit.write("Error                    = cleanup.submit.err\n")
+        submit.write("Queue\n")                 
+    submit.close()        
+
+def cleanUpShellScript():
+    """cleanUpShellScript
+    Write bash script to call CleanUp.py.
+    """
+    with open('run_cleanup.sh', 'w') as out:
+        out.write("#!/bin/bash\n")                                             # set shell
+        out.write("source /opt/bifxapps/miniconda3/etc/profile.d/conda.sh\n")  # add conda to path
+        out.write("unset $PYTHONPATH\n")                                       # remove default PYTHONPATH         
+        out.write(f"conda activate /home/glbrc.org/mplace/miniforge3\n")       # start up environment 
+        out.write("/home/glbrc.org/mplace/scripts/sppider_condor/CleanUp.py -s $1\n") 
+        out.write("conda deactivate\n")
+    out.close()
+
+    os.chmod('run_cleanup.sh', 0o0777)                                   # change file permissions to run
 
 def main():
     cmdparser = argparse.ArgumentParser(description="Run sppIDer on a set of genomes and sample fastqs.", 
@@ -200,14 +228,18 @@ def main():
         cmdparser.print_help()
         cmdparser.exit(1, "Reference genome file is missing.")       
 
+    # create submit files for the dagman
     combine_Submit()
     process_Submit()
+    cleanUpSubmitFile()
+    cleanUpShellScript()
+
     mydag = Dagfile()        # set up dagman
     num = 1                  # for job steps
     currDir = os.getcwd() + '/'
     # create the sets to run
     for sample in fastq.keys():
-        print(sample)
+        print(f'Setting up job for {sample}')
         prefix = "ref_" + sample + '.fasta'
         refSet = set(refs.keys())   # get a set of all reference names
         refSet.discard(sample)      # remove the fastq name 
@@ -234,9 +266,17 @@ def main():
         mydag.add_job(processJob)
         num += 1
 
+        cleanJob = Job('cleanup.submit', 'job' + str(num))
+        cleanJob.pre_skip(1)
+        cleanJob.add_var('sample', sample)
+        cleanJob.add_parent(processJob)
+        mydag.add_job(cleanJob)
+        num += 1
+
     mydag.save('MasterDagman.dsf')
     
-       
+    print('Ready to submit:')
+    print('enter: condor_submit_dag MasterDagman.dsf ')
 
 if __name__ == "__main__":
     main()
