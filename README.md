@@ -30,19 +30,61 @@ r : str
 
 ## Usage
 
+Login into scarcity-submit.glbrc.org (Do not start a condor interactive job, you must be on the submit node.)
+
 Navigate to your job directory, I recommend a "clean" directory just for running this job.
 
 Activate this conda environment:
 
       conda activate  /home/glbrc.org/mplace/miniforge3
 
-Then within your directory run:
+Input file format.
+
+1) Genome Paths file, 2 columns , no header, tab delimited,  Name   path (including ../../../ as a prefix) looks like:
+
+    yHDO590_kloeckera_taiwanica_180604.haplomerger2 ../../../mnt/bigdata/processed_data/hittinger/fungal_genomes/from_vanderbilt/to_uw/y1000_final_files.fixed/genomes/yHDO590_kloeckera_taiwanica_180604.haplomerger2.fas
+    
+
+2) Read Paths file, 2 columns, no header, tab delimited,  looks like: 
+
+    yHDO590_kloeckera_taiwanica_180604.haplomerger2 /mnt/bigdata/processed_data/hittinger/y1000_final_files/reads/yHDO590_kloeckera_taiwanica_R1.fastq
+
+Now run the job setup script:
 
  /home/glbrc.org/mplace/scripts/sppider_condor/sppiderCondor.py -f read_paths.txt -r genome_paths.txt
 
-This will prepare the job to be run by HTCondor.  When the script is complete run  the following command (which is printed to the screen for your convenience) :
+Screen output will show the job being setup, something like this: 
 
-Condor_submit_dag MasterDagman.dsf 
+
+Setting up job for yHDO590_kloeckera_taiwanica_180604.haplomerger2
+Setting up job for yHMPu5000026147_hanseniaspora_vineae_190924.haplomerger2
+
+and at the end of the job list you will see:
+
+Ready to submit:
+enter: condor_submit_dag MasterDagman.dsf
+
+using the terminal enter:  condor_submit_dag MasterDagman.dsf 
+
+Check the inital job submission status:
+
+condor_q 
+
+This will show something like the following:
+
+-- Schedd: scarcity-ap-1.glbrc.org : <144.92.98.163:9618?... @ 03/10/25 09:50:10
+OWNER  BATCH_NAME                SUBMITTED   DONE   RUN    IDLE  TOTAL JOB_IDS
+mplace MasterDagman.dsf+98363   3/10 09:49      _      _      8     66 98395.0 ... 98415.0
+
+Then once the cluster starts picking up jobs it will show jobs running:
+
+-- Schedd: scarcity-ap-1.glbrc.org : <144.92.98.163:9618?... @ 03/10/25 09:50:56
+OWNER  BATCH_NAME                SUBMITTED   DONE   RUN    IDLE  TOTAL JOB_IDS
+mplace MasterDagman.dsf+98363   3/10 09:49      _     22      _     66 98395.0 ... 98506.0
+
+To see an example run on scarcity :
+
+/home/glbrc.org/mplace/projects/sppider_condor
 
 ## Requirements
 python package shortuuid is required.  If you want to create your own environment install is using: 
