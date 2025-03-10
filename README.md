@@ -16,18 +16,6 @@ The first job will be
 
 combineRefGenomes.py using B,C,D ref genomes then using A.fastq to run sppIDer.py.
 
-## Input
-
-f : str
-    A file containing a list of sample names and full path to sample fastq files, tab delimited.
-
-    yHDO590_kloeckera_taiwanica_180604.haplomerger2  /mnt/bigdata/processed_data/hittinger/y1000_final_files/reads/yHDO590_kloeckera_taiwanica_R1.fastq
-
-r : str
-    A file containing a list of genome names and the genome fasta files.
-
-    yHDO590_kloeckera_taiwanica_180604.haplomerger2  /mnt/bigdata/processed_data/hittinger/fungal_genomes/from_vanderbilt/to_uw/y1000_final_files.fixed/genomes/yHDO590_kloeckera_taiwanica_180604.haplomerger2.fas
-
 ## Usage
 
 Login into scarcity-submit.glbrc.org (Do not start a condor interactive job, you must be on the submit node.)
@@ -40,12 +28,16 @@ Activate this conda environment:
 
 Input file format.
 
-1) Genome Paths file, 2 columns , no header, tab delimited,  Name   path (including ../../../ as a prefix) looks like:
+1) Genome Paths file, 2 columns , no header, tab delimited, each sample on a single line.
+
+    Name   path (including ../../../ as a prefix) looks like:
 
     yHDO590_kloeckera_taiwanica_180604.haplomerger2 ../../../mnt/bigdata/processed_data/hittinger/fungal_genomes/from_vanderbilt/to_uw/y1000_final_files.fixed/genomes/yHDO590_kloeckera_taiwanica_180604.haplomerger2.fas
     
 
-2) Read Paths file, 2 columns, no header, tab delimited,  looks like: 
+2) Read Paths file, 2 columns, no header, tab delimited,  each sample on a single line.
+
+    Name Path, looks like: 
 
     yHDO590_kloeckera_taiwanica_180604.haplomerger2 /mnt/bigdata/processed_data/hittinger/y1000_final_files/reads/yHDO590_kloeckera_taiwanica_R1.fastq
 
@@ -53,7 +45,7 @@ Now run the job setup script:
 
  /home/glbrc.org/mplace/scripts/sppider_condor/sppiderCondor.py -f read_paths.txt -r genome_paths.txt
 
-Screen output will show the job being setup, something like this: 
+Screen output will show the jobs being setup, something like this: 
 
 
 Setting up job for yHDO590_kloeckera_taiwanica_180604.haplomerger2
@@ -85,6 +77,19 @@ mplace MasterDagman.dsf+98363   3/10 09:49      _     22      _     66 98395.0 .
 To see an example run on scarcity :
 
 /home/glbrc.org/mplace/projects/sppider_condor
+
+## Input
+
+f : str
+    A file containing a list of sample names and full path to sample fastq files, tab delimited, one sample per line.
+
+    yHDO590_kloeckera_taiwanica_180604.haplomerger2  /mnt/bigdata/processed_data/hittinger/y1000_final_files/reads/yHDO590_kloeckera_taiwanica_R1.fastq
+
+r : str
+    A file containing a list of genome names and the genome fasta files, one sample per line.
+
+    yHDO590_kloeckera_taiwanica_180604.haplomerger2  /mnt/bigdata/processed_data/hittinger/fungal_genomes/from_vanderbilt/to_uw/y1000_final_files.fixed/genomes/yHDO590_kloeckera_taiwanica_180604.haplomerger2.fas
+
 
 ## Requirements
 python package shortuuid is required.  If you want to create your own environment install is using: 
