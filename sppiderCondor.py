@@ -31,6 +31,10 @@ f : str
 
     yHDO590_kloeckera_taiwanica_180604.haplomerger2  /mnt/bigdata/processed_data/hittinger/y1000_final_files/reads/yHDO590_kloeckera_taiwanica_R1.fastq
 
+m : int
+
+    Memory (RAM) in GB request for job, defaults to 64GB.
+
 r : str
     A file containing a list of genome names and the genome fasta files.
 
@@ -40,7 +44,7 @@ Example
 -------
     usage:
 
-        sppiderCondor.py -f Saccharomycodales_read_paths.txt -r Saccharomycodales_genome_paths.txt
+        sppiderCondor.py -f Saccharomycodales_read_paths.txt -r Saccharomycodales_genome_paths.txt -m 128
     
     after running the script you should see:
 
@@ -99,7 +103,7 @@ def process_Submit():
         out.write('log = process-$(sample).log\n')
         out.write('\n')
         out.write('request_cpus = 2\n')
-        out.write('request_memory = 256GB\n')
+        out.write('request_memory = $(mem)\n')
         out.write('\n')
         out.write('queue\n')
     out.close()
@@ -145,7 +149,7 @@ def combine_Submit():
         out.write('log = combine-$(sample).log\n')
         out.write('\n')
         out.write('request_cpus = 2\n')
-        out.write('request_memory = 16GB\n')
+        out.write('request_memory = $(mem)\n')
         out.write('queue\n')
     out.close()
 
@@ -180,11 +184,13 @@ def cleanUpShellScript():
 
 def main():
     cmdparser = argparse.ArgumentParser(description="Run sppIDer on a set of genomes and sample fastqs.", 
-                                        usage='%(prog)s -f <fastq-list.txt> -r <refgenome-list.txt',
+                                        usage='%(prog)s -f <fastq-list.txt> -r <refgenome-list.txt -m <memory in GB>',
                                         prog='sppiderCondor.py'  )
     cmdparser.add_argument('-f', '--fastqs',    action='store', dest='FASTQS', 
                            help='''Sample Name and fastq file path, tab delimited. (Forward read file)\n
                            Sample Name must match Ref Genome name in ref genome file.''', metavar='')
+    cmdparser.add_argument('-m', '--memory', action='store', dest='MEM',
+                           help='Memory request in GB, defaults to 64', metavar='')
     cmdparser.add_argument('-r', '--refgenomes', action='store', dest='REF', 
                            help='Ref Genome name and ref file path, tab delimited.', metavar='')
     cmdResults = vars(cmdparser.parse_args())
@@ -213,6 +219,13 @@ def main():
     else:
         cmdparser.print_help()
         cmdparser.exit(1, "Fastq file is missing.")
+
+    if cmdResults['MEM'] is not None:
+        memory = cmdResults['MEM']
+        if not memory.endswith('GB'):
+            memory = memory + 'GB'
+    else:
+        memory = '64GB'
 
     # dictionary to hold reference genome information
     # key = sample name, expected to match the name in the fastq file
@@ -260,6 +273,7 @@ def main():
         combineJob.add_var('out', prefix)
         combineJob.add_var('refKey', currDir + keyFile)
         combineJob.add_var('sample', sample)
+        combineJob.add_var('mem', memory)
         mydag.add_job(combineJob)    
         num += 1
 
@@ -269,6 +283,7 @@ def main():
         processJob.add_var('ref', currDir + prefix)
         processJob.add_var('read', fastq[sample])
         processJob.add_var('sample', sample)
+        processJob.add_var('mem', memory)
         processJob.add_parent(combineJob)
         mydag.add_job(processJob)
         num += 1
