@@ -43,7 +43,7 @@ Input file format.
 
 Now run the job setup script:
 
- /home/glbrc.org/mplace/scripts/sppider_condor/sppiderCondor.py -f read_paths.txt -r genome_paths.txt
+ /home/glbrc.org/mplace/scripts/sppider_condor/sppiderCondor.py -f read_paths.txt -r genome_paths.txt -m 128
 
 Screen output will show the jobs being setup, something like this: 
 
@@ -84,6 +84,9 @@ f : str
     A file containing a list of sample names and full path to sample fastq files, tab delimited, one sample per line.
 
     yHDO590_kloeckera_taiwanica_180604.haplomerger2  /mnt/bigdata/processed_data/hittinger/y1000_final_files/reads/yHDO590_kloeckera_taiwanica_R1.fastq
+
+m : int
+    Memory (RAM) in GB request for job, defaults to 64GB.
 
 r : str
     A file containing a list of genome names and the genome fasta files, one sample per line.
